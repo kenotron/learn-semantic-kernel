@@ -1,11 +1,29 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿#pragma warning disable SKEXP0110 // Type is for evaluation purposes only and is subject to change or removal in future updates.
+#pragma warning disable SKEXP0101 // Type is for evaluation purposes only and is subject to change or removal in future updates.
+#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
+
+using System.Text;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Agents;
+using Microsoft.SemanticKernel.Agents.Chat;
 using WebSearchPluginExtensions;
 using MultiAgent.Agents.WebResearchAgent;
+using MultiAgent.Agents.ContentWritingAgent;
+using MultiAgent.Agents.SupervisorAgent;
+
+// Helper method to get emoji for agent
+static string GetAgentEmoji(string agentName) => agentName switch
+{
+    "ProjectSupervisor" => "👔",
+    "WebResearchExpert" => "🔍", 
+    "ContentWritingExpert" => "✍️",
+    "User" => "👤",
+    _ => "🤖"
+};
 
 // Load configuration from appsettings.json and user secrets
 IConfiguration configuration = new ConfigurationBuilder()
@@ -37,36 +55,117 @@ kernel.DisplayWebSearchPluginInfo();
 Console.WriteLine($"✅ Added WebPageAnalysisPlugin with AnalyzePageAsync function");
 Console.WriteLine($"📊 Total plugins loaded: {kernel.Plugins.Count}");
 
-// 5. Create the Web Deep Research Expert agent
+// 5. Create all agents
 var webResearchAgent = WebResearchAgent.CreateAgent(kernel);
+var contentWritingAgent = ContentWritingAgent.CreateAgent(kernel);
+var supervisorAgent = SupervisorAgent.CreateAgent(kernel);
 
-Console.WriteLine("=== Web Deep Research Expert Agent ===");
-Console.WriteLine("Type your research questions or topics. The agent will search for current information and provide comprehensive analysis.");
-Console.WriteLine("Type 'exit' to quit.\n");
+Console.WriteLine("=== Multi-Agent Content Creation System ===");
+Console.WriteLine("Available agents:");
+Console.WriteLine("  🔍 Web Research Expert - Conducts comprehensive web research");
+Console.WriteLine("  ✍️  Content Writing Expert - Creates high-quality written content");
+Console.WriteLine("  👔 Project Supervisor - Coordinates between research and writing teams");
+Console.WriteLine();
+Console.WriteLine("Using AgentGroupChat for coordinated multi-agent collaboration.");
+Console.WriteLine("Type your content creation requests. Type 'exit' to quit.\n");
 
-// 6. Create a ChatHistoryAgentThread for managing the conversation
-var agentThread = new ChatHistoryAgentThread();
+// 6. Create AgentGroupChat for coordinated multi-agent collaboration
+var groupChat = new AgentGroupChat(supervisorAgent, webResearchAgent, contentWritingAgent)
+{
+    ExecutionSettings = new()
+    {
+        // Use a sequential selection strategy starting with supervisor
+        SelectionStrategy = new SequentialSelectionStrategy()
+        {
+            // Always start with supervisor for initial planning
+            InitialAgent = supervisorAgent
+        },
+        // Set termination condition
+        TerminationStrategy = new RegexTerminationStrategy("WORKFLOW_COMPLETE")
+        {
+            // Maximum of 10 turns to prevent infinite loops
+            MaximumIterations = 20
+        }
+    }
+};
 
 string? userInput;
 
 do
 {
-  Console.Write("Research Query > ");
-  userInput = Console.ReadLine();
+    Console.Write("Content Request > ");
+    userInput = Console.ReadLine();
 
-  if (string.IsNullOrWhiteSpace(userInput) || userInput.ToLower() == "exit")
-  {
-    break;
-  }
+    if (string.IsNullOrWhiteSpace(userInput) || userInput.ToLower() == "exit")
+    {
+        break;
+    }    Console.WriteLine("\n🚀 Starting Multi-Agent Collaboration...\n");
 
-  Console.WriteLine("\n🔍 Researching...\n");
+    // Add the user request to the group chat
+    groupChat.AddChatMessage(new ChatMessageContent(AuthorRole.User, 
+        $"Content creation request: {userInput}\n\n" +
+        "Instructions for the team:\n" +
+        "1. Supervisor: Create a project plan and coordinate the workflow\n" +
+        "2. Research Expert: Conduct comprehensive research based on the plan\n" +
+        "3. Content Writer: Create high-quality content using the research\n" +
+        "4. Supervisor: Review and approve the final deliverable\n" +
+        "When the workflow is complete, end with 'WORKFLOW_COMPLETE'"));
 
-  // Invoke the agent with the user message directly
-  await foreach (var message in webResearchAgent.InvokeAsync(userInput, agentThread))
-  {
-    Console.WriteLine($"🧠 Research Expert: {message.Message.Content}");
-  }
-
-  Console.WriteLine("\n" + new string('-', 80) + "\n");
+    // Execute the group chat workflow with streaming
+    string? currentAgent = null;
+    var messageBuffer = new StringBuilder();
+    
+    try 
+    {
+        await foreach (var streamingMessage in groupChat.InvokeStreamingAsync())
+        {
+            // Check if this is from a new agent
+            var agentName = streamingMessage.AuthorName ?? "Agent";
+            
+            if (currentAgent != agentName)
+            {
+                // If we have content from previous agent, display it
+                if (currentAgent != null && messageBuffer.Length > 0)
+                {
+                    Console.WriteLine($"\n{GetAgentEmoji(currentAgent)} **{currentAgent}:** {messageBuffer}");
+                    Console.WriteLine();
+                }
+                
+                // Start new agent
+                currentAgent = agentName;
+                messageBuffer.Clear();
+                Console.Write($"\n{GetAgentEmoji(agentName)} **{agentName}:** ");
+            }
+            
+            // Stream the content in real-time
+            if (!string.IsNullOrEmpty(streamingMessage.Content))
+            {
+                Console.Write(streamingMessage.Content);
+                messageBuffer.Append(streamingMessage.Content);
+            }
+        }
+        
+        // Display any remaining content
+        if (currentAgent != null && messageBuffer.Length > 0)
+        {
+            Console.WriteLine("\n");
+        }
+    }
+    catch (NotSupportedException)
+    {
+        // Fallback to non-streaming if streaming is not supported
+        Console.WriteLine("⚠️  Streaming not supported, falling back to batch processing...\n");
+        
+        await foreach (var message in groupChat.InvokeAsync())
+        {
+            var agentName = message.AuthorName ?? "Agent";
+            var emoji = GetAgentEmoji(agentName);
+            Console.WriteLine($"{emoji} **{agentName}:**");
+            Console.WriteLine($"{message.Content}");
+            Console.WriteLine();
+        }
+    }
+    
+    Console.WriteLine($"\n{new string('-', 80)}\n");
 
 } while (true);

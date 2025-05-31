@@ -1,2 +1,3 @@
 ## learning semantic kernel
 C# documentation is here: https://learn.microsoft.com/en-us/dotnet/api/microsoft.semantickernel?view=semantic-kernel-dotnet
+OpenAI has newer models, so don't change it back to gpt-4!! 
