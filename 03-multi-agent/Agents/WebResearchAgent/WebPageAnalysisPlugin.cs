@@ -7,7 +7,7 @@ using ReverseMarkdown;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace WebResearchAgents;
+namespace MultiAgent.Agents.WebResearchAgent;
 
 /// <summary>
 /// A plugin that analyzes web pages, extracts content and related links, and assesses their research value.

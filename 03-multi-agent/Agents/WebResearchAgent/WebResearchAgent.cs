@@ -4,7 +4,7 @@ using Microsoft.SemanticKernel.Agents.OpenAI;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
-namespace WebResearchAgents;
+namespace MultiAgent.Agents.WebResearchAgent;
 
 public static class WebResearchAgent
 {

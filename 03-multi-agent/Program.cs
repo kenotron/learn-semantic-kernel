@@ -5,7 +5,7 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Agents;
 using WebSearchPluginExtensions;
-using WebResearchAgents;
+using MultiAgent.Agents.WebResearchAgent;
 
 // Load configuration from appsettings.json and user secrets
 IConfiguration configuration = new ConfigurationBuilder()

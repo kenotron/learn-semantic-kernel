@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 using Microsoft.SemanticKernel;
 using System.Text;
 
+namespace MultiAgent.Agents.WebResearchAgent;
+
 /// <summary>
 /// A plugin that provides web search capabilities using SearxNG API and returns results as formatted Markdown.
 /// </summary>

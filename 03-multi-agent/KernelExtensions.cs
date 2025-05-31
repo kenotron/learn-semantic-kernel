@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
+using MultiAgent.Agents.WebResearchAgent;
 
 namespace WebSearchPluginExtensions;
 
