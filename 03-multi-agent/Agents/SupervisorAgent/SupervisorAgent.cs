@@ -75,6 +75,7 @@ public static class SupervisorAgent
         {
             Instructions = instructions,
             Name = "ProjectSupervisor",
+            Description = "Project Supervisor and Content Coordination Expert",
             Kernel = kernel,
             Arguments = new KernelArguments(new OpenAIPromptExecutionSettings()
             {

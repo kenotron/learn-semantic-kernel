@@ -1,15 +1,28 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.Agents.OpenAI;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using WebSearchPluginExtensions;
 
 namespace MultiAgent.Agents.WebResearchAgent;
 
+
+
 public static class WebResearchAgent
 {
-    public static ChatCompletionAgent CreateAgent(Kernel kernel)
-    {        const string instructions = """
+
+    public async static Task<ChatCompletionAgent> CreateAgent(Kernel kernel)
+    {
+        var agentKernel = kernel.Clone();
+        await agentKernel.AddWebSearchPluginAsync(
+            localSearxngUrl: "http://10.0.0.251:30053/",
+            publicSearxngUrl: "https://searx.be");
+
+        agentKernel.DisplayWebSearchPluginInfo();
+
+        const string instructions = """
             You are a Web Deep Research Expert, an AI assistant specialized in conducting comprehensive research on topics that may not be covered by your training data cutoff.
 
             Your core capabilities include:
@@ -61,7 +74,8 @@ public static class WebResearchAgent
         {
             Instructions = instructions,
             Name = "WebResearchExpert",
-            Kernel = kernel,
+            Kernel = agentKernel,
+            Description = "An AI assistant specialized in conducting comprehensive web research on topics that may not be covered by your training data cutoff.",
             Arguments = new KernelArguments(new OpenAIPromptExecutionSettings()
             {
                 ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,

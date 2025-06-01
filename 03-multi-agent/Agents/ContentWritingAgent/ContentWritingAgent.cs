@@ -67,6 +67,7 @@ public static class ContentWritingAgent
             Instructions = instructions,
             Name = "ContentWritingExpert",
             Kernel = kernel,
+            Description = "An AI assistant specialized in creating high-quality, engaging, and well-structured written content.",
             Arguments = new KernelArguments(new OpenAIPromptExecutionSettings()
             {
                 ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,

@@ -18,6 +18,8 @@
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.54.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Agents.Core" Version="1.54.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Agents.OpenAI" Version="1.54.0-preview" />
+    <PackageReference Include="Microsoft.SemanticKernel.Agents.Orchestration" Version="1.54.0-preview" />
+    <PackageReference Include="Microsoft.SemanticKernel.Agents.Runtime.InProcess" Version="1.54.0-preview" />
     <PackageReference Include="ReverseMarkdown" Version="4.7.0" />
   </ItemGroup>
   
