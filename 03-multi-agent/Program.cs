@@ -43,6 +43,13 @@ var webResearchAgent = await WebResearchAgent.CreateAgent(kernel);
 var contentWritingAgent = ContentWritingAgent.CreateAgent(kernel);
 var supervisorAgent = SupervisorAgent.CreateAgent(kernel);
 
+Console.WriteLine("=== Multi-Agent Content Creation System ===");
+Console.WriteLine("Available agents:");
+Console.WriteLine("  🔍 Web Research Expert - Conducts comprehensive web research");
+Console.WriteLine("  ✍️  Content Writing Expert - Creates high-quality written content");
+Console.WriteLine("  👔 Project Supervisor - Coordinates between research and writing teams");
+Console.WriteLine();
+Console.WriteLine("Using GroupChatOrchestration for coordinated multi-agent collaboration.");
 Console.WriteLine("Type your content creation requests. Type 'exit' to quit.\n");
 
 var runtime = new InProcessRuntime();
@@ -64,9 +71,38 @@ var orchestration = new GroupChatOrchestration(groupChatManager, supervisorAgent
     }
 };
 
-// 3. Start the orchestration
-var userInput = "I need a comprehensive article about the latest advancements in AI and machine learning, including recent research findings and practical applications.";
-var result = await orchestration.InvokeAsync(userInput, runtime);
-string text = await result.GetValueAsync();
+string? userInput;
 
+do
+{
+    Console.Write("Content Request > ");
+    userInput = Console.ReadLine();
+
+    if (string.IsNullOrWhiteSpace(userInput) || userInput.ToLower() == "exit")
+    {
+        break;
+    }
+    
+    Console.WriteLine("\n🚀 Starting Multi-Agent Collaboration...\n");
+
+    try 
+    {
+        Console.WriteLine("🔄 Starting orchestration...");
+        var result = await orchestration.InvokeAsync(userInput, runtime);
+        
+        Console.WriteLine("⏳ Waiting for result...");
+        string finalResult = await result.GetValueAsync(TimeSpan.FromSeconds(300)); // 5 minutes timeout
+        
+        Console.WriteLine($"\n✅ **Final Result:**\n{finalResult}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"\n❌ **Error:** {ex.Message}");
+    }
+    
+    Console.WriteLine($"\n{new string('-', 80)}\n");
+
+} while (true);
+
+// Cleanup
 await runtime.RunUntilIdleAsync();
