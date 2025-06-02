@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
-    <RootNamespace>_03_multi_agent</RootNamespace>
+    <RootNamespace>_04_multi_perspectives_agent</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>c2ea55c4-9dda-416f-b46a-52e148442ff1</UserSecretsId>
